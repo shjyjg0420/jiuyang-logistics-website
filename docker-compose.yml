@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: jiuyang-logistics-server
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongo:27017/jiuyang-logistics
+      PORT: 5000
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - logistics-network
+
+  mongo:
+    image: mongo:7.0
+    container_name: jiuyang-logistics-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+      MONGO_INITDB_DATABASE: jiuyang-logistics
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+      - ./init-db.js:/docker-entrypoint-initdb.d/init-db.js
+    networks:
+      - logistics-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: jiuyang-logistics-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: changeme
+      ME_CONFIG_MONGODB_URL: mongodb://admin:changeme@mongo:27017
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongo
+    networks:
+      - logistics-network
+
+volumes:
+  mongo_data:
+  mongo_config:
+
+networks:
+  logistics-network:
+    driver: bridge
